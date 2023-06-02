@@ -13,7 +13,9 @@ and any layer that implements the same interface can substitute for the
 attention layer.
 """
 
+from math import sqrt
 from torch.nn import Linear, Module
+from torch.nn.init import xavier_normal_
 
 from ..events import EventDispatcher, QKVEvent
 
@@ -50,13 +52,26 @@ class AttentionLayer(Module):
         d_values = d_values or (d_model//n_heads)
         d_model_keys = d_model_keys or d_model
 
+        if (d_keys == 0) or (d_values == 0):
+            raise ValueError(
+                'The dimension of keys and values are set by default to' +
+                '`d_model//n_heads`, hence `d_model` should be strictly' +
+                'larger than `n_heads`when `d_keys` and `d_values` are not' +
+                'specified.')
+
         self.inner_attention = attention
-        self.query_projection = Linear(d_model, d_keys * n_heads)
-        self.key_projection = Linear(d_model_keys, d_keys * n_heads)
-        self.value_projection = Linear(d_model_keys, d_values * n_heads)
+        self.query_projection = Linear(d_model, d_keys * n_heads, bias=False)
+        self.key_projection = Linear(
+            d_model_keys, d_keys * n_heads, bias=False)
+        self.value_projection = Linear(
+            d_model_keys, d_values * n_heads, bias=False)
         self.out_projection = Linear(d_values * n_heads, d_model)
         self.n_heads = n_heads
         self.event_dispatcher = EventDispatcher.get(event_dispatcher)
+
+        xavier_normal_(self.query_projection.weight.data, gain=sqrt(0.02))
+        xavier_normal_(self.key_projection.weight.data, gain=sqrt(0.02))
+        xavier_normal_(self.value_projection.weight.data, gain=sqrt(0.02))
 
     def forward(self, queries, keys, values, attn_mask, query_lengths,
                 key_lengths):

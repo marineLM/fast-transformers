@@ -75,7 +75,8 @@ class LinearAttention(Module):
         Z = 1/(torch.einsum("nlhd,nhd->nlh", Q, K.sum(dim=1))+self.eps)
 
         # Finally compute and return the new values
-        V = torch.einsum("nlhd,nhmd,nlh->nlhm", Q, KV, Z)
+        # V = torch.einsum("nlhd,nhmd,nlh->nlhm", Q, KV, Z)
+        V = torch.einsum("nlhd,nhmd->nlhm", Q, KV)
 
         return V.contiguous()
 

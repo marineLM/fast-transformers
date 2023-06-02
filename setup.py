@@ -202,7 +202,7 @@ def setup_package():
     meta = collect_metadata()
     version_suffix = os.getenv("FAST_TRANSFORMERS_VERSION_SUFFIX", "")
     setup(
-        name="pytorch-fast-transformers",
+        name="my-pytorch-fast-transformers",
         version=meta["version"] + version_suffix,
         description=meta["description"],
         long_description=long_description,
